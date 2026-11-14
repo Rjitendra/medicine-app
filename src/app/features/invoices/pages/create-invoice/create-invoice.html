@@ -1,0 +1,233 @@
+<div class="create-invoice-container">
+  <h1>Create Medicine Bill</h1>
+
+  <!-- Store Details Form -->
+  @if (!storeInfoFormSubmitted()) {
+    <div class="store-form-wrapper">
+      <h3>Store Information</h3>
+      <form [formRoot]="storeForm" (submit)="submitStoreForm($event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Store Name</label>
+            <input type="text" [formField]="storeForm.storeName" />
+          </div>
+          <div class="form-group">
+            <label>Store Address</label>
+            <input type="text" [formField]="storeForm.storeAddress" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone 1</label>
+            <input type="tel" [formField]="storeForm.storePhone" />
+          </div>
+          <div class="form-group">
+            <label>Phone 2</label>
+            <input type="tel" [formField]="storeForm.storePhone2" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>License No</label>
+            <input type="text" [formField]="storeForm.licenseNo" />
+          </div>
+          <div class="form-group">
+            <label>FSSAI</label>
+            <input type="text" [formField]="storeForm.fssai" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>GSTIN</label>
+            <input type="text" [formField]="storeForm.gstin" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" [formField]="storeForm.email" />
+          </div>
+        </div>
+
+        <button type="button" class="btn-submit" (click)="submitStoreForm($event)">
+          Continue
+        </button>
+        @if (storeFormAttempted() && !storeForm().valid()) {
+          <p class="form-error" role="alert">Please complete the required store name, address, phone, license number, and GSTIN fields.</p>
+        }
+      </form>
+    </div>
+  }
+
+  <!-- Invoice Form (hidden after invoice is created) -->
+  @if (storeInfoFormSubmitted() && !currentInvoice()) {
+    <div class="form-wrapper">
+      <app-invoice-form
+        (submit)="handleInvoiceFormSubmit($event)"
+        (cancel)="cancel()"
+      />
+    </div>
+  }
+
+  @if (currentInvoice(); as invoice) {
+    <div class="invoice-management">
+      <div class="tab-buttons">
+        <button
+          [class.active]="activeTab() === 'items'"
+          class="tab-btn"
+          (click)="setActiveTab('items')"
+        >
+          Medicine Items
+        </button>
+        <button
+          [class.active]="activeTab() === 'preview'"
+          class="tab-btn"
+          (click)="setActiveTab('preview')"
+        >
+          Preview & Export
+        </button>
+      </div>
+
+      @if (activeTab() === 'items') {
+        <div class="items-section">
+          <div class="preset-row">
+            <label for="medicine-preset">Default Medicine Set</label>
+            <select
+              id="medicine-preset"
+              class="preset-select"
+              [value]="selectedPreset()"
+              (change)="onPresetChange($event)"
+            >
+              @for (preset of medicinePresets; track preset.id) {
+                <option [value]="preset.id">{{ preset.label }}</option>
+              }
+            </select>
+          </div>
+
+          <app-medicine-table
+            [items]="medicineItems()"
+            (removeItem)="clearItem($event)"
+            (resetAll)="resetAllItems()"
+            (addItem)="addItem()"
+          />
+
+          <div class="medicine-form">
+            <h3>{{ editingIndex() !== null ? 'Edit Medicine Item' : 'Add Medicine Item' }}</h3>
+            <form [formRoot]="medicineForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Medicine Name</label>
+                  <input type="text" [formField]="medicineForm.itemName" />
+                </div>
+                <div class="form-group">
+                  <label>Pack</label>
+                  <input type="text" [formField]="medicineForm.pack" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>HSN Code</label>
+                  <input type="text" [formField]="medicineForm.hsn" />
+                </div>
+                <div class="form-group">
+                  <label>Drug Code</label>
+                  <input type="text" [formField]="medicineForm.drugCode" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Batch</label>
+                  <input type="text" [formField]="medicineForm.batch" />
+                </div>
+                <div class="form-group">
+                  <label>Expiry Date</label>
+                  <input type="date" [formField]="medicineForm.expiryDate" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>MRP</label>
+                  <input
+                    type="number"
+                    [formField]="medicineForm.mrp"
+                    step="0.01"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Quantity</label>
+                  <input
+                    type="number"
+                    [formField]="medicineForm.quantity"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Discount %</label>
+                  <input
+                    type="number"
+                    [formField]="medicineForm.discountPercentage"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>GST %</label>
+                  <input
+                    type="number"
+                    [formField]="medicineForm.gstPercentage"
+                  />
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn-submit"
+                  (click)="saveMedicineItem()"
+                  [disabled]="!medicineForm().valid()"
+                >
+                  {{ editingIndex() !== null ? 'Update' : 'Add' }} Medicine
+                </button>
+                @if (editingIndex() !== null) {
+                  <button
+                    type="button"
+                    (click)="cancelEdit()"
+                    class="btn-cancel"
+                  >
+                    Cancel Edit
+                  </button>
+                }
+              </div>
+            </form>
+          </div>
+
+          <div class="summary-wrapper">
+            <app-bill-summary [items]="medicineItems()" />
+          </div>
+        </div>
+      }
+
+      <!-- Invoice template always in DOM so preview + PDF stay in sync -->
+      <div
+        class="invoice-preview-host"
+        [class.is-visible]="activeTab() === 'preview'"
+      >
+        <app-invoice-template [invoice]="currentInvoice()" />
+      </div>
+
+      @if (activeTab() === 'preview') {
+        <div class="action-buttons">
+          <button (click)="printInvoice()" class="btn-print">Print</button>
+          <button (click)="downloadPdf()" class="btn-download">Download PDF</button>
+          <button (click)="shareWhatsapp()" class="btn-whatsapp">Share WhatsApp</button>
+          <button (click)="saveInvoice()" class="btn-save">Save Invoice</button>
+          <button (click)="cancel()" class="btn-cancel-all">Cancel</button>
+        </div>
+      }
+    </div>
+  }
+</div>

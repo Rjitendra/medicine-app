@@ -1,0 +1,52 @@
+<div class="medicine-table">
+  <div class="table-toolbar">
+    <button type="button" (click)="resetAll.emit()" class="btn-reset">Reset All</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Item No.</th>
+        <th>Medicine Name</th>
+        <th>Pack</th>
+        <th>HSN Code</th>
+        <th>Drug Code</th>
+        <th>Batch</th>
+        <th>Expiry</th>
+        <th>MRP</th>
+        <th>Qty</th>
+        <th>Discount %</th>
+        <th>GST %</th>
+        <th>Amount</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of items(); track $index; let i = $index) {
+        <tr>
+          <td>{{ i + 1 }}</td>
+          <td>{{ item.itemName }}</td>
+          <td>{{ item.pack }}</td>
+          <td>{{ item.hsn }}</td>
+          <td>{{ item.drugCode }}</td>
+          <td>{{ item.batch }}</td>
+          <td>{{ formatExpiry(item.expiryDate) }}</td>
+          <td>{{ item.mrp.toFixed(2) }}</td>
+          <td>{{ item.quantity }}</td>
+          <td>{{ item.discountPercentage }}%</td>
+          <td>{{ item.gstPercentage }}%</td>
+          <td>{{ (item.mrp * item.quantity).toFixed(2) }}</td>
+          <td>
+            <button type="button" (click)="removeItem.emit(i)" class="btn-clear">Clear</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="13" class="empty-msg">
+            No medicines in the list. Use + Add Medicine to add items.
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  <button type="button" (click)="addItem.emit()" class="btn-add">+ Add Medicine</button>
+</div>

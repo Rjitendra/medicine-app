@@ -1,0 +1,238 @@
+@if (invoice(); as inv) {
+  <div id="invoice-print" class="invoice-wrap">
+    <div class="invoice-box">
+      <table class="inv-table">
+        <colgroup>
+          <col class="c-no" />
+          <col class="c-name" />
+          <col class="c-pack" />
+          <col class="c-hsn" />
+          <col class="c-drug" />
+          <col class="c-batch" />
+          <col class="c-exp" />
+          <col class="c-mrp" />
+          <col class="c-qty" />
+          <col class="c-lo" />
+          <col class="c-amt" />
+          <col class="c-dis" />
+          <col class="c-gst" />
+        </colgroup>
+
+        <!-- Header -->
+        <tr>
+          <td colspan="13" class="header-block">
+            <table class="header-grid">
+              <colgroup>
+                <col class="header-left-col" />
+                <col class="header-right-col" />
+              </colgroup>
+              <tr>
+                <td class="name-cell">
+                  <div class="store-name-bar">
+                    {{ inv.store?.storeName || "MEDICINE POINT" }}
+                  </div>
+                </td>
+                <td class="title-outside" rowspan="2">
+                  <span class="title-center">RETAIL INVOICE</span>
+                  <span class="title-cash">{{ inv.paymentMethod || 'CASH' }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="inv-head">
+                  <div class="inv-meta">
+                    <div class="inv-meta-line">
+                      Invoice No.: <strong>{{ inv.invoiceNo }}</strong>
+                    </div>
+                    <div class="inv-meta-line">
+                      Invoice Date: {{ inv.invoiceDate | date: 'dd-MM-yyyy' }}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2" class="addr-cell">
+                  {{ inv.store?.storeAddress || "KANDARANGA, KENDRAPARA, ODISHA" }}
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2" class="detail-section-wrap">
+                  <table class="header-detail-grid">
+                    <colgroup>
+                      <col style="width:50%" />
+                      <col style="width:50%" />
+                    </colgroup>
+                    <tr class="detail-row">
+                      <td class="detail-cell">
+                        <div class="detail-inner">
+                          <div class="detail-line patient-line">
+                            <strong>Patient Name:</strong>
+                            {{ inv.customer?.patientName || 'MR.JITENDRA BEHERA' }}
+                          </div>
+                          <div class="detail-line">
+                            <span class="lbl">Address :</span>
+                            {{ inv.customer?.address || 'AT-NAGESWARPUR KENDRAPARA' }}
+                          </div>
+                          <div class="detail-line split-line">
+                            <span class="lbl">Phone No:</span>
+                            {{ inv.customer?.phoneNumber || '9840988388' }}
+                          </div>
+                          <div class="detail-line split-line">
+                            <span class="lbl gstin-lbl">GSTIN:</span>
+                            <span>{{ inv.customer?.gstin || '' }}</span>
+                          </div>
+                          <div class="detail-line split-line">
+                            <span class="lbl">Doctor Name:</span>
+                            <span>{{ formatDoctorName(inv.customer?.doctorName) }}</span>
+                            <strong class="time-val">Time:{{ inv.invoiceTime }}</strong>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Items header -->
+        <tr class="items-hdr">
+          <th class="col-no">No</th>
+          <th class="col-left">Item Name</th>
+          <th class="col-left">Pack</th>
+          <th class="col-left">HSN</th>
+          <th class="col-left">Drug.Cd</th>
+          <th class="col-left">Batch</th>
+          <th class="col-left">ExpDt</th>
+          <th class="col-right">ReviseMrp</th>
+          <th class="col-mid">Qty</th>
+          <th class="col-lo">Lo</th>
+          <th class="col-right">Amount</th>
+          <th class="col-mid">Dis%</th>
+          <th class="col-mid">GST%</th>
+        </tr>
+
+        @for (item of inv.items; track $index; let i = $index) {
+          <tr class="item-row">
+            <td class="col-no">{{ (i + 1) }}</td>
+            <td class="col-left">{{ item.itemName }}</td>
+            <td class="col-left">{{ item.pack }}</td>
+            <td class="col-left">{{ item.hsn }}</td>
+            <td class="col-left">{{ item.drugCode }}</td>
+            <td class="col-left">{{ item.batch }}</td>
+            <td class="col-left">{{ formatExpiry(item.expiryDate) }}</td>
+            <td class="col-right">{{ item.mrp.toFixed(2) }}</td>
+            <td class="col-mid">{{ item.quantity }}</td>
+            <td class="col-lo">0</td>
+            <td class="col-right">{{ getItemAmount(item).toFixed(2) }}</td>
+            <td class="col-mid">{{ item.discountPercentage }}</td>
+            <td class="col-mid">{{ item.gstPercentage }}</td>
+          </tr>
+        }
+
+        @if (!inv.items?.length) {
+          <tr class="item-row">
+            <td colspan="13" class="empty">&nbsp;</td>
+          </tr>
+        }
+
+        <!-- Sub Total row -->
+        <tr class="subtotal-row">
+          <td colspan="10" class="col-left"><strong>Sub Total</strong></td>
+          <td colspan="3" class="col-right">
+            <strong>{{ inv.subTotal?.toFixed(2) }}</strong>
+          </td>
+        </tr>
+
+        <tr class="post-subtotal-space">
+          <td colspan="13"></td>
+        </tr>
+
+        <!-- Summary Grid -->
+        <tr>
+          <td colspan="13" class="summary-cell">
+            <table class="summary-tbl">
+              <colgroup>
+                <col span="4" class="sum-col-gst" />
+                <col class="sum-col-lbl" />
+                <col class="sum-col-val" />
+                <col class="sum-col-tax" />
+                <col class="sum-col-tax" />
+                <col class="sum-col-tax" />
+                <col class="sum-col-tax" />
+                <col class="sum-col-grand" />
+              </colgroup>
+              <tr>
+                <td class="sum-gst-hdr">GST-5%</td>
+                <td class="sum-gst-hdr">GST-12%</td>
+                <td class="sum-gst-hdr">GST-18%</td>
+                <td class="sum-gst-hdr">GST-28%</td>
+                <td class="lbl">Sub.Total</td>
+                <td class="num">{{ inv.taxableAmount?.toFixed(2) }}</td>
+                <td class="lbl">C.GST:</td>
+                <td class="num">{{ inv.cgst?.toFixed(2) }}</td>
+                <td class="lbl">S.GST:</td>
+                <td class="num">{{ inv.sgst?.toFixed(2) }}</td>
+                <td rowspan="3" class="sg-grand">
+                  <div class="gt-wrap">
+                    <div class="gt-lbl">GRAND TOTAL</div>
+                    <div class="gt-val">
+                      <strong>{{ inv.grandTotal?.toFixed(2) }}</strong>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="num sum-gst-cell">{{ getSlabTaxable(inv, 5).toFixed(2) }}</td>
+                <td class="num sum-gst-cell">{{ getSlabTaxable(inv, 12).toFixed(2) }}</td>
+                <td class="num sum-gst-cell">{{ getSlabTaxable(inv, 18).toFixed(2) }}</td>
+                <td class="num sum-gst-cell">{{ getSlabTaxable(inv, 28).toFixed(2) }}</td>
+                <td class="lbl">QTY.DISC.</td>
+                <td class="num">{{ inv.totalDiscount?.toFixed(2) }}</td>
+                <td class="lbl">S. GST:</td>
+                <td class="num">{{ inv.sgst?.toFixed(2) }}</td>
+                <td class="lbl">Db.C:</td>
+                <td class="num">0.00/C</td>
+              </tr>
+              <tr>
+                <td class="num sum-gst-cell">{{ getSlabTax(inv.items, 5).toFixed(2) }}</td>
+                <td class="num sum-gst-cell">{{ getSlabTax(inv.items, 12).toFixed(2) }}</td>
+                <td class="num sum-gst-cell">{{ getSlabTax(inv.items, 18).toFixed(2) }}</td>
+                <td class="num sum-gst-cell">{{ getSlabTax(inv.items, 28).toFixed(2) }}</td>
+                <td class="lbl">&nbsp;</td>
+                <td class="num">&nbsp;</td>
+                <td class="lbl">I. GST :</td>
+                <td class="num">{{ inv.igst ? inv.igst.toFixed(2) : '0.00' }}</td>
+                <td class="lbl">COIN.</td>
+                <td class="num">{{ getCoinValue(inv) }}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td colspan="5" class="tot-qty">
+            <strong>Tot Qty {{ inv.totalQuantity }}</strong>
+          </td>
+          <td colspan="8" class="amt-words">
+            <strong>{{ inv.amountInWords }}</strong>
+          </td>
+        </tr>
+
+        <tr>
+          <td colspan="13" class="footer-cell">
+            <p>* Medicine/Goods Can Not be returned after being sold * Price are inclusive of all Taxes.</p>
+            <p>* Goods supplied against this bill do not contravene Sec.18 of Drug & Cosmetics Act.1948.</p>
+            <p>* Please show the Medicines to the Doctor before use.,All disputes Subject to KENDRAPARA Jurisdiction only</p>
+            <p class="vendor">dataTech,Ctc.,Mob:9437052652,0671-2417652</p>
+            <div class="footer-bottom-line">
+              <span class="last-acc">Last Accessed By --</span>
+              <span class="get-well"><strong>GET WELL SOON.....</strong></span>
+              <span class="for-store">For : R.P. {{ inv.store?.storeName || 'MEDICINE POINT' }}</span>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+}

@@ -1,0 +1,33 @@
+<div class="bill-summary">
+  <h3>Bill Summary</h3>
+  
+  <div class="summary-row">
+    <label>Subtotal:</label>
+    <span class="value">₹{{ totals().subTotal.toFixed(2) }}</span>
+  </div>
+
+  <div class="summary-row">
+    <label>Discount:</label>
+    <span class="value">₹{{ totals().totalDiscount.toFixed(2) }}</span>
+  </div>
+
+  <div class="summary-row">
+    <label>Taxable Amount:</label>
+    <span class="value">₹{{ totals().taxableAmount.toFixed(2) }}</span>
+  </div>
+
+  <div class="summary-row">
+    <label>CGST:</label>
+    <span class="value">₹{{ totals().cgst.toFixed(2) }}</span>
+  </div>
+
+  <div class="summary-row">
+    <label>SGST:</label>
+    <span class="value">₹{{ totals().sgst.toFixed(2) }}</span>
+  </div>
+
+  <div class="summary-row total">
+    <label>Grand Total:</label>
+    <span class="value">₹{{ totals().grandTotal.toFixed(2) }}</span>
+  </div>
+</div>
